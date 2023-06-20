@@ -1,0 +1,238 @@
+const { MessageEmbed } = require("discord.js");
+
+const ee = require("../botconfig/embed.json");
+const settings = require("../botconfig/settings.json");
+const BLSettings = require('./../models/bl');
+const asSettings = require('./../models/as');
+const moment = require('moment');
+const fetch = require("node-fetch");
+const config = require(`./../botconfig/config.json`);
+
+
+module.exports = {
+    name: "check", //the command name for the Slash Command
+    description: "Permet de check un joueur", //the command description for Slash Command Overview
+    cooldown: 5,
+    memberpermissions: [], //Only allow members with specific Permissions to execute a Commmand [OPTIONAL]
+    requiredroles: [], //Only allow specific Users with a Role to execute a Command [OPTIONAL]
+    alloweduserids: [], //Only allow specific Users to execute a Command [OPTIONAL]
+    options: [ //OPTIONAL OPTIONS, make the array empty / dont add this option if you don't need options!
+        //INFORMATIONS! You can add Options, but mind that the NAME MUST BE LOWERCASED! AND NO SPACES!!!, for the CHOCIES you need to add a array of arrays; [ ["",""] , ["",""] ] 
+        //{"Integer": { name: "ping_amount", description: "How many times do you want to ping?", required: true }}, //to use in the code: interacton.getInteger("ping_amount")
+        { "String": { name: "pseudo", description: "Quel joueur check ?", required: true } }, //to use in the code: interacton.getString("title")
+        //{"User": { name: "ping_a_user", description: "To Ping a user lol", required: false }}, //to use in the code: interacton.getUser("ping_a_user")
+        //{"Channel": { name: "in_where", description: "In What Channel should I send it?", required: false }}, //to use in the code: interacton.getChannel("what_channel")
+        //{"Role": { name: "what_role", description: "To Ping a Role lol", required: false }}, //to use in the code: interacton.getRole("what_role")
+        //{"IntChoices": { name: "what_ping", description: "What Ping do you want to get?", required: true, choices: [["Bot", 1], ["Discord Api", 2]] }}, //here the second array input MUST BE A NUMBER // TO USE IN THE CODE: interacton.getInteger("what_ping")
+        //{"StringChoices": { name: "what_ping", description: "What Ping do you want to get?", required: true, choices: [["Bot", "botping"], ["Discord Api", "api"]] }}, //here the second array input MUST BE A STRING // TO USE IN THE CODE: interacton.getString("what_ping")
+
+    ],
+    run: async (client, interaction, message) => {
+        try {
+            //console.log(interaction, StringOption)
+
+            //things u c/an directly access in an interaction!
+            const { member, channelId, guildId, applicationId,
+                commandName, deferred, replied, ephemeral,
+                options, id, createdTimestamp
+            } = interaction;
+            const { guild } = member;
+            //let IntOption = options.getInteger("OPTIONNAME"); //same as in IntChoices //RETURNS NUMBER
+            const Text = options.getString("pseudo"); //same as in StringChoices //RETURNS STRING 
+            //let UserOption = options.getUser("OPTIONNAME"); //RETURNS USER OBJECT 
+
+
+            var embed_pub = new MessageEmbed()
+                .setTitle(`[PUB] Fais ta pub ici !`)
+                .setColor("#ff0000")
+                .setDescription(`Deviens le partenaire mensuel de ScamTracker moyennant un petit don et ta pub sera affichée ici (lien vers serveur discord, image, etc...) !`)
+                .setImage(`https://i.imgur.com/siirEJg.png`)
+
+
+            const embedintrouvable = new MessageEmbed()
+                .setTitle(`Joueur introuvable !`)
+                .setColor("#ff0000")
+                .setDescription(`Le joueur ne semble pas exister ou n'est pas trouvable !`)
+
+            let pseudo = Text;
+            const mojangapi = await fetch(`https://api.mojang.com/users/profiles/minecraft/${pseudo}`);
+            const data = await mojangapi.json().catch(function (error) {
+                
+                interaction.reply({ embeds: [embedintrouvable] });
+            });
+
+            let uuid = data.id;
+            let pseudo2 = data.name
+
+            const hyapi = await fetch(`https://api.hypixel.net/player?uuid=${uuid}&key=${config.api_key}`);
+            const data2 = await hyapi.json().catch(function (error) {
+                interaction.reply(`L'API d'Hypixel semble être down.`);
+              
+            });
+            let pseudo3 = 'erreur 001'
+
+            /* MOJANG A STOP L'API HISTORIQUE DES PSEUDOS
+            const mojangapi2 = await fetch(`https://api.mojang.com/user/profiles/${uuid}/names`);
+            const listepseudos = await mojangapi2.json().catch(function(error) {
+              console.log(error)
+            });
+            const allpseudos1 = listepseudos.map(x => x.name)
+            const allpseudos2 = allpseudos1.map(x => `\`${x}\``)
+            const allpseudos = allpseudos2.join(', ')*/
+
+            
+
+            const embedno = new MessageEmbed()
+                .setTitle(`✅ Informations du joueur : ✅`)
+                .setDescription(`Si jamais tu te fais arnaquer, va voir le staff d'un de nos serveurs Discord partenaires (\`/infos\`) afin d'ajouter un joueur à notre ScamList.`)
+
+                .addFields({ name: "• __**ScamList :**__", value: `\`${pseudo2}\` __**n'est pas**__ dans notre ScamList` })
+                .setURL(`https://sky.shiiyu.moe/stats/${pseudo2}/`)
+                .setThumbnail(`https://crafatar.com/avatars/${uuid}?overlay`)
+                .setFooter({text: ee.footertext, iconURL: ee.footericon})
+                .setColor("#35f009")
+
+            const embedas = new MessageEmbed()
+                .setTitle(`🔸 Informations du joueur : 🔸`)
+                .setFooter({text: ee.footertext, iconURL: ee.footericon})
+                .setURL(`https://sky.shiiyu.moe/stats/${pseudo2}/`)
+                .setColor("#ee942e")
+
+            const embed = new MessageEmbed()
+                .setTitle(`⛔ Informations du joueur : ⛔`)
+                .setColor("#ff0000")
+                .setFooter({text: ee.footertext, iconURL: ee.footericon })
+                .setURL(`https://sky.shiiyu.moe/stats/${pseudo2}/`)
+
+            try {
+                /*var controller = new AbortController();
+                const signal = controller.signal
+                setTimeout(() => controller.abort(), 1000);
+                */
+                pseudo3 = data2.player.displayname
+                const hyapi2 = await fetch(`https://api.hypixel.net/guild?key=${config.api_key}&player=${uuid}`);
+                const data3 = await hyapi2.json()
+                var guilde = 'Aucune guilde.'
+                try {
+                    guilde = data3.guild.name
+                } catch {
+                    console.log("Il n'a pas de guilde.")
+                }
+
+                var rank = data2.player.newPackageRank
+                var mvp = data2.player.monthlyPackageRank
+                var xp = data2.player.networkExp
+                var level2 = (Math.sqrt((2 * xp) + 30625) / 50) - 2.5
+                var level = Math.round(level2 * 100) / 100
+                var karma = data2.player.karma
+                function formatNumber(num) {
+                    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')
+                }
+
+                var first = data2.player.firstLogin
+                var firstbis = moment(first).format('DD/MM/YYYY')
+                var last = data2.player.lastLogin
+                var lastbis = moment(last).format('DD/MM/YYYY')
+                var last2 = data2.player.lastLogout
+                var pre = 'null'
+                if (last2 < last) {
+                    pre = '🟢 Connecté sur Hypixel.'
+                } else {
+                    pre = '🔴 Non-connecté sur Hypixel.'
+                }
+                var langue = data2.player.userLanguage
+                var version = data2.player.mcVersionRp
+                var discord = 'Aucun Discord lié.'
+                try {
+                    discord = data2.player.socialMedia.links.DISCORD
+                } catch (error) {
+                    console.log("Il n'a pas de Discord lié.")
+                }
+                if (rank === 'MVP_PLUS') {
+                    rank = 'MVP+'
+                } else if (rank === 'VIP_PLUS') {
+                    rank = 'VIP+'
+                }
+                if (!rank) {
+                    rank = 'Aucun grade.'
+                }
+                if (mvp === 'SUPERSTAR') {
+                    rank = 'MVP++'
+                }
+                if (!langue) {
+                    langue = 'Langue inconnue.'
+                }
+                if (langue === 'FRENCH') {
+                    langue = ':flag_fr: Français'
+                } else if (langue === 'ENGLISH') {
+                    langue = ':flag_gb: Anglais'
+                }
+                embedno.addFields({name:"• __**Rank :**__", value:`${rank}`})
+                embedno.addFields({name:"• __**Level :**__", value:`${level}`})
+                embedno.addFields({name:"• __**Guilde :**__", value:`${guilde}`})
+                embedno.addFields({name:"• __**Première connexion :**__", value:`${firstbis}`})
+                embedno.addFields({name:"• __**Dernière connexion :**__", value:`${lastbis}`})
+                embedno.addFields({name:"• __**Discord :**__", value:`${discord}`})
+                //embedno.addFields("• __**Derniers pseudos :**__", `${allpseudos}`)
+                embedno.addFields({name:"\u200B", value:`${pre}`})
+
+                embed.addFields({name:"• __**Rank :**__", value:`${rank}`})
+                embed.addFields({name:"• __**Level :**__", value:`${level}`})
+                embed.addFields({name:"• __**Guilde :**__",value: `${guilde}`})
+                embed.addFields({name:"• __**Première connexion :**__", value:`${firstbis}`})
+                embed.addFields({name:"• __**Dernière connexion :**__", value:`${lastbis}`})
+                embed.addFields({name:"• __**Discord :**__", value:`${discord}`})
+                //embed.addFields("• __**Derniers pseudos :**__", `${allpseudos}`)
+                embed.addFields({name:"\u200B", value:`${pre}`})
+
+                embedas.addFields({name:"• __**Rank :**__", value:`${rank}`})
+                embedas.addFields({name:"• __**Level :**__", value:`${level}`})
+                embedas.addFields({name:"• __**Guilde :**__", value:`${guilde}`})
+                embedas.addFields({name:"• __**Première connexion :**__", value:`${firstbis}`})
+                embedas.addFields({name:"• __**Dernière connexion :**__", value:`${lastbis}`})
+                embedas.addFields({name:"• __**Discord :**__", value:`${discord}`})
+                //embedas.addFields("• __**Derniers pseudos :**__", `${allpseudos}`)
+                embedas.addFields({name:"\u200B", value:`${pre}`})
+
+            } catch (error) {
+                console.log('ici2')
+                embedno.addFields({name:"• __**Remarque :**__", value:"De nombreuses informations ne sont pas disponibles car l'API Hypixel du joueur semble inaccessible."})
+                embed.addFields({name:"• __**Remarque :**__", value:"De nombreuses informations ne sont pas disponibles car l'API Hypixel du joueur semble inaccessible."})
+                console.log(error)
+            }
+
+            const results = await BLSettings.findOne({
+                uuid: uuid,
+            });
+            const results2 = await asSettings.findOne({
+                uuid: uuid,
+            });
+
+
+
+            if (!results) {
+                if (!results2) {
+                    return interaction.reply({ embeds: [embedno, embed_pub] })
+                } else {
+                    embedas.setDescription(`Ce joueur a scam par le passé mais a remboursé la totalité du stuff volé. Tu peux trade avec lui mais soit vigilant !\n\n• __**ScamList :**__\n\`${pseudo2}\` __**a été**__ dans notre ScamList\n__Ajouté dans la ScamList le :__ ${moment(results2.timestampa).format('DD/MM/YYYY')}\n__A tout remboursé le :__ ${moment(results2.timestamp).format('DD/MM/YYYY')}\n__Raison de l'ancien scam :__ ${results2.reasona}`)
+                    embedas.setThumbnail(`https://crafatar.com/avatars/${results2.uuid}?overlay`)
+                    return interaction.reply({ embeds: [embedas] })
+                }
+            } else {
+                let dequi = await client.users.fetch(results.author);
+                dequi = `${dequi.username}#${dequi.discriminator}`;
+                
+                embed.setDescription(`Nous te conseillons de ne pas trade avec lui. Si jamais tu penses que c'est une erreur, va voir le staff d'un de nos serveurs Discord partenaires (\`/infos\`).\n\n• __**ScamList :**__\n\`${pseudo2}\` __**est**__ dans notre ScamList\n__Depuis le :__ ${moment(results.timestamp).format('DD/MM/YYYY')}\n__Raison :__ ${results.reason}\n__Ajouté par :__ ${dequi}`)
+                embed.setThumbnail(`https://crafatar.com/avatars/${results.uuid}?overlay`)
+                interaction.reply({ embeds: [embed] })
+            }
+
+
+
+        } catch (e) {
+            console.log(String(e.stack).bgRed)
+        }
+
+        
+    }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "scamtracker",
+  "version": "2.1.1",
+  "description": "ScamTracker V2",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/Tomato6966/v13-music-bot"
+  },
+  "keywords": [
+    "Bot",
+    "Discord",
+    "Discord-jsv13",
+    "v13",
+    "js",
+    "nodejs"
+  ],
+  "author": "Odyrac",
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/builders": "^0.6.0",
+    "child_process": "^1.0.2",
+    "colors": "^1.4.0",
+    "discord.js": "^13.1.0",
+    "moment": "^2.29.4",
+    "mongoose": "^6.7.0",
+    "node-fetch": "^2.6.7",
+    "nodemon": "^2.0.20"
+  }
+}

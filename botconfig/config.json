@@ -1,0 +1,14 @@
+{
+  "token": "",
+  "api_key": "",
+  "mongoose_url": "",
+  "prefix": ")",
+  "loadSlashsGlobal": false, "_COMMENT_": "Set it to true, when your Slash Commands are ready, false loads instant true loads slow but stable! (GLOBAL/GUILD COMMANDS, DISCORD DOCS!)",
+  "slashCommandsDirs": [
+        {
+                "Folder": "admin",
+                "CmdName": "admin",
+                "CmdDescription": "Administration du serveur"
+        }
+   ]
+}
